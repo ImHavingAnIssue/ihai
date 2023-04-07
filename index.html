@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Parallax Effect</title>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			overflow-x: hidden;
+		}
+
+		.parallax {
+			background-image: url("https://images.unsplash.com/photo-1527777340698-05a4e321903f");
+			background-size: cover;
+			background-attachment: fixed;
+			background-position: center;
+			height: 100vh;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.parallax h1 {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			color: #fff;
+			font-size: 5rem;
+			text-align: center;
+			text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+		}
+
+		.content {
+			background-color: #fff;
+			padding: 50px;
+			text-align: center;
+			height: 1000px;
+		}
+
+	</style>
+</head>
+<body>
+	<div class="parallax">
+		<h1>Parallax Effect</h1>
+	</div>
+
+	<div class="content">
+		<h2>Some Content</h2>
+		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean at ante metus. Nullam ultrices magna massa, sed tempus magna viverra eget. Fusce sagittis, metus sit amet efficitur finibus, augue risus molestie ex, sed pulvinar mauris dolor nec velit. Duis a elementum enim. Nunc vel risus id velit consequat mollis at at velit. Quisque euismod lectus quis sapien eleifend, quis pulvinar lectus euismod. Sed vehicula diam at diam dignissim, eu suscipit velit bibendum. Aliquam id iaculis massa.</p>
+	</div>
+
+</body>
+</html>

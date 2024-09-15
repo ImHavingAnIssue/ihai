@@ -1,53 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>Parallax Effect</title>
-	<style>
-		body {
-			margin: 0;
-			padding: 0;
-			overflow-x: hidden;
-		}
-
-		.parallax {
-			background-image: url("https://images.unsplash.com/photo-1527777340698-05a4e321903f");
-			background-size: cover;
-			background-attachment: fixed;
-			background-position: center;
-			height: 100vh;
-			position: relative;
-			overflow: hidden;
-		}
-
-		.parallax h1 {
-			position: absolute;
-			top: 50%;
-			left: 50%;
-			transform: translate(-50%, -50%);
-			color: #fff;
-			font-size: 5rem;
-			text-align: center;
-			text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
-		}
-
-		.content {
-			background-color: #fff;
-			padding: 50px;
-			text-align: center;
-			height: 1000px;
-		}
-
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake YouTube</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-	<div class="parallax">
-		<h1>Parallax Effect</h1>
-	</div>
-
-	<div class="content">
-		<h2>Some Content</h2>
-		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean at ante metus. Nullam ultrices magna massa, sed tempus magna viverra eget. Fusce sagittis, metus sit amet efficitur finibus, augue risus molestie ex, sed pulvinar mauris dolor nec velit. Duis a elementum enim. Nunc vel risus id velit consequat mollis at at velit. Quisque euismod lectus quis sapien eleifend, quis pulvinar lectus euismod. Sed vehicula diam at diam dignissim, eu suscipit velit bibendum. Aliquam id iaculis massa.</p>
-	</div>
-
+    <div class="container">
+        <header class="header">
+            <div class="logo">FakeYouTube</div>
+            <div class="search-bar">
+                <input type="text" placeholder="Search...">
+                <button>Search</button>
+            </div>
+            <div class="user-menu">
+                <div class="user-icon">U</div>
+            </div>
+        </header>
+        <div class="content">
+            <aside class="sidebar">
+                <nav>
+                    <ul>
+                        <li>Home</li>
+                        <li>Trending</li>
+                        <li>Subscriptions</li>
+                        <li>Library</li>
+                        <li>History</li>
+                    </ul>
+                </nav>
+            </aside>
+            <main class="video-section">
+                <div class="video-grid">
+                    <!-- Example video cards -->
+                    <div class="video-card">
+                        <div class="thumbnail">Thumbnail</div>
+                        <div class="video-info">
+                            <h3>Video Title</h3>
+                            <p>Channel Name</p>
+                            <p>Views • Timestamp</p>
+                        </div>
+                    </div>
+                    <div class="video-card">
+                        <div class="thumbnail">Thumbnail</div>
+                        <div class="video-info">
+                            <h3>Video Title</h3>
+                            <p>Channel Name</p>
+                            <p>Views • Timestamp</p>
+                        </div>
+                    </div>
+                    <!-- Add more video cards as needed -->
+                </div>
+            </main>
+        </div>
+    </div>
 </body>
 </html>

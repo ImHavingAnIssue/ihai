@@ -1,3 +1,3 @@
-# Van der Linde Gang
+# aimb0t test
 
-Welcome to the **Van der Linde Gang** repository.
+welcome to the **aimbot test** repository.

@@ -1,6 +1,6 @@
 local teamCheck = false
 local fov = 150
-
+local hideCircleWithGUI = true
 
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -17,61 +17,89 @@ FOVring.Color = Color3.fromRGB(255, 128, 128)
 
 -- GUI Setup
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-local Frame = Instance.new("Frame", ScreenGui)
-local Header = Instance.new("Frame", Frame)
-local HeaderLabel = Instance.new("TextLabel", Header)
-local ToggleButton = Instance.new("TextButton", Frame)
-local TeamCheckButton = Instance.new("TextButton", Frame)  -- Team Check Button
-local IYButton = Instance.new("TextButton", Frame)
-local FOVSliderFrame = Instance.new("Frame", Frame)
-local FOVSliderBar = Instance.new("Frame", FOVSliderFrame)
-
 ScreenGui.Name = "aimb0tGUI"
-Frame.Size = UDim2.new(0, 150, 0, 200)  -- Increased size of the UI
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 150, 0, 240)
 Frame.Position = UDim2.new(0, 20, 0, 20)
 Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Frame.BorderSizePixel = 0
 
+local Header = Instance.new("Frame", Frame)
 Header.Size = UDim2.new(1, 0, 0, 30)
 Header.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Header.BorderSizePixel = 0
 
+local HeaderLabel = Instance.new("TextLabel", Header)
 HeaderLabel.Size = UDim2.new(1, 0, 1, 0)
 HeaderLabel.BackgroundTransparency = 1
 HeaderLabel.Text = "hex iy+aimb0t"
 HeaderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 HeaderLabel.TextSize = 14
 
+local ToggleButton = Instance.new("TextButton", Frame)
 ToggleButton.Size = UDim2.new(0, 130, 0, 30)
 ToggleButton.Position = UDim2.new(0, 10, 0, 40)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 ToggleButton.Text = "aimb0t · off"
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 
-TeamCheckButton.Size = UDim2.new(0, 130, 0, 30)  -- Team Check Button Setup
+local TeamCheckButton = Instance.new("TextButton", Frame)
+TeamCheckButton.Size = UDim2.new(0, 130, 0, 30)
 TeamCheckButton.Position = UDim2.new(0, 10, 0, 80)
 TeamCheckButton.BackgroundColor3 = Color3.fromRGB(100, 180, 100)
 TeamCheckButton.Text = "team check · off"
 TeamCheckButton.TextColor3 = Color3.new(1, 1, 1)
 
+local IYButton = Instance.new("TextButton", Frame)
 IYButton.Size = UDim2.new(0, 130, 0, 30)
 IYButton.Position = UDim2.new(0, 10, 0, 120)
 IYButton.BackgroundColor3 = Color3.fromRGB(120, 100, 180)
 IYButton.Text = "infinite yield"
 IYButton.TextColor3 = Color3.new(1, 1, 1)
 
+local SettingsButton = Instance.new("TextButton", Frame)
+SettingsButton.Size = UDim2.new(0, 130, 0, 30)
+SettingsButton.Position = UDim2.new(0, 10, 0, 160)
+SettingsButton.BackgroundColor3 = Color3.fromRGB(100, 150, 200)
+SettingsButton.Text = "settings"
+SettingsButton.TextColor3 = Color3.new(1, 1, 1)
+
+local FOVSliderFrame = Instance.new("Frame", Frame)
 FOVSliderFrame.Size = UDim2.new(0, 130, 0, 20)
-FOVSliderFrame.Position = UDim2.new(0, 10, 0, 160)
+FOVSliderFrame.Position = UDim2.new(0, 10, 0, 200)
 FOVSliderFrame.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 
+local FOVSliderBar = Instance.new("Frame", FOVSliderFrame)
 FOVSliderBar.Size = UDim2.new(fov / 300, 0, 1, 0)
 FOVSliderBar.BackgroundColor3 = Color3.fromRGB(255, 128, 128)
-FOVSliderBar.Parent = FOVSliderFrame
 
+-- Settings Tab
+local SettingsTab = Instance.new("Frame", ScreenGui)
+SettingsTab.Size = UDim2.new(0, 160, 0, 100)
+SettingsTab.Position = UDim2.new(0, 180, 0, 20)
+SettingsTab.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SettingsTab.Visible = false
+
+local SettingsClose = Instance.new("TextButton", SettingsTab)
+SettingsClose.Size = UDim2.new(0, 20, 0, 20)
+SettingsClose.Position = UDim2.new(1, -25, 0, 5)
+SettingsClose.Text = "X"
+SettingsClose.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+SettingsClose.TextColor3 = Color3.new(1, 1, 1)
+
+local ShiftToggle = Instance.new("TextButton", SettingsTab)
+ShiftToggle.Size = UDim2.new(1, -10, 0, 30)
+ShiftToggle.Position = UDim2.new(0, 5, 0, 30)
+ShiftToggle.Text = "hide circle w/ gui · on"
+ShiftToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+ShiftToggle.TextColor3 = Color3.new(1, 1, 1)
+
+-- Toggles
 local aimb0tEnabled = false
 local guiVisible = true
 
--- Dragging Functionality
+-- Dragging
 local dragging = false
 local dragStart, startPos
 
@@ -95,14 +123,15 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- Logic
 local function toggleaimb0t()
     aimb0tEnabled = not aimb0tEnabled
     ToggleButton.Text = "aimb0t · " .. (aimb0tEnabled and "on" or "off")
-    FOVring.Visible = aimb0tEnabled
+    FOVring.Visible = aimb0tEnabled and guiVisible and not (hideCircleWithGUI and not guiVisible)
 end
 
 local function updateFOV(percentage)
-    fov = math.clamp(math.floor(percentage * 300), 50, 300) -- FOV range: 50 to 300
+    fov = math.clamp(math.floor(percentage * 300), 50, 300)
     FOVring.Radius = fov
     FOVSliderBar.Size = UDim2.new(fov / 300, 0, 1, 0)
 end
@@ -116,7 +145,6 @@ FOVSliderFrame.InputBegan:Connect(function(input)
             local mousePos = UserInputService:GetMouseLocation()
             local relativeX = math.clamp((mousePos.X - FOVSliderFrame.AbsolutePosition.X) / FOVSliderFrame.AbsoluteSize.X, 0, 1)
             updateFOV(relativeX)
-
             if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
                 connection:Disconnect()
             end
@@ -134,15 +162,31 @@ TeamCheckButton.MouseButton1Click:Connect(function()
     TeamCheckButton.Text = "team check · " .. (teamCheck and "on" or "off")
 end)
 
+SettingsButton.MouseButton1Click:Connect(function()
+    SettingsTab.Visible = not SettingsTab.Visible
+end)
+
+SettingsClose.MouseButton1Click:Connect(function()
+    SettingsTab.Visible = false
+end)
+
+ShiftToggle.MouseButton1Click:Connect(function()
+    hideCircleWithGUI = not hideCircleWithGUI
+    ShiftToggle.Text = "hide circle w/ gui · " .. (hideCircleWithGUI and "on" or "off")
+end)
+
 -- Toggle GUI visibility with RightShift
 UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.RightShift then
         guiVisible = not guiVisible
         ScreenGui.Enabled = guiVisible
+        if hideCircleWithGUI then
+            FOVring.Visible = aimb0tEnabled and guiVisible
+        end
     end
 end)
 
--- aimb0t Logic
+-- Aimbot targeting
 local function getClosest(cframe)
     local closestTarget = nil
     local closestDistance = math.huge
@@ -167,6 +211,7 @@ local function getClosest(cframe)
     return closestTarget
 end
 
+-- Loop
 local loop
 loop = RunService.RenderStepped:Connect(function()
     FOVring.Position = Camera.ViewportSize / 2
@@ -177,6 +222,12 @@ loop = RunService.RenderStepped:Connect(function()
             local targetPosition = closestTarget.Character.Head.Position
             Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPosition)
         end
+    end
+
+    if not ScreenGui.Enabled and hideCircleWithGUI then
+        FOVring.Visible = false
+    elseif aimb0tEnabled and ScreenGui.Enabled then
+        FOVring.Visible = true
     end
 
     if UserInputService:IsKeyDown(Enum.KeyCode.Delete) then

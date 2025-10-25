@@ -122,7 +122,8 @@ local HitboxValueLabel = Instance.new("TextLabel", SettingsTab)
 HitboxValueLabel.Size = UDim2.new(1, -10, 0, 20)
 HitboxValueLabel.Position = UDim2.new(0, 5, 0, 130)
 HitboxValueLabel.BackgroundTransparency = 1
-HitboxValueLabel.Text = "size: " .. tostring(hitboxSize)
+HitboxValueLabel.Text = "size · " .. tostring(hitboxSize) .. " (default = 50)"
+
 HitboxValueLabel.TextColor3 = Color3.new(1,1,1)
 HitboxValueLabel.TextXAlignment = Enum.TextXAlignment.Left
 

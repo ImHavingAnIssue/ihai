@@ -1,4 +1,5 @@
-local teamCheck = false
+-- integrated aimb0t + hitbox expander (client-side / studio/dev testing)
+local teamCheck = false 
 local fov = 150
 local hideCircleWithGUI = true
 
@@ -20,7 +21,7 @@ local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 ScreenGui.Name = "aimb0tGUI"
 
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 150, 0, 240)
+Frame.Size = UDim2.new(0, 150, 0, 260)
 Frame.Position = UDim2.new(0, 20, 0, 20)
 Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Frame.BorderSizePixel = 0
@@ -33,14 +34,17 @@ Header.BorderSizePixel = 0
 local HeaderLabel = Instance.new("TextLabel", Header)
 HeaderLabel.Size = UDim2.new(1, 0, 1, 0)
 HeaderLabel.BackgroundTransparency = 1
-HeaderLabel.Text = "hex iy+aimb0t"
+HeaderLabel.Text = "wuiuo's aimb0t"
 HeaderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 HeaderLabel.TextSize = 14
+
+-- style color for primary buttons (matches aimb0t button)
+local primaryButtonColor = Color3.fromRGB(100, 100, 100)
 
 local ToggleButton = Instance.new("TextButton", Frame)
 ToggleButton.Size = UDim2.new(0, 130, 0, 30)
 ToggleButton.Position = UDim2.new(0, 10, 0, 40)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+ToggleButton.BackgroundColor3 = primaryButtonColor
 ToggleButton.Text = "aimb0t · off"
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 
@@ -76,7 +80,7 @@ FOVSliderBar.BackgroundColor3 = Color3.fromRGB(255, 128, 128)
 
 -- Settings Tab
 local SettingsTab = Instance.new("Frame", ScreenGui)
-SettingsTab.Size = UDim2.new(0, 160, 0, 100)
+SettingsTab.Size = UDim2.new(0, 220, 0, 170)
 SettingsTab.Position = UDim2.new(0, 180, 0, 20)
 SettingsTab.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 SettingsTab.Visible = false
@@ -88,16 +92,47 @@ SettingsClose.Text = "X"
 SettingsClose.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
 SettingsClose.TextColor3 = Color3.new(1, 1, 1)
 
+-- hide circle / gui button (now same style as aimb0t button)
 local ShiftToggle = Instance.new("TextButton", SettingsTab)
 ShiftToggle.Size = UDim2.new(1, -10, 0, 30)
 ShiftToggle.Position = UDim2.new(0, 5, 0, 30)
 ShiftToggle.Text = "hide circle w/ gui · on"
-ShiftToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+ShiftToggle.BackgroundColor3 = primaryButtonColor
 ShiftToggle.TextColor3 = Color3.new(1, 1, 1)
+
+-- HITBOX EXPANDER UI - no separate title; status dot in the button text like others
+local HitboxToggle = Instance.new("TextButton", SettingsTab)
+HitboxToggle.Size = UDim2.new(1, -10, 0, 30)
+HitboxToggle.Position = UDim2.new(0, 5, 0, 70)
+HitboxToggle.BackgroundColor3 = primaryButtonColor
+HitboxToggle.Text = "hitbox expander · off"
+HitboxToggle.TextColor3 = Color3.new(1,1,1)
+
+local HitboxSliderFrame = Instance.new("Frame", SettingsTab)
+HitboxSliderFrame.Size = UDim2.new(1, -20, 0, 12)
+HitboxSliderFrame.Position = UDim2.new(0, 10, 0, 110)
+HitboxSliderFrame.BackgroundColor3 = Color3.fromRGB(70,70,70)
+
+local hitboxSize = 50 -- default size
+local HitboxSliderBar = Instance.new("Frame", HitboxSliderFrame)
+HitboxSliderBar.Size = UDim2.new(math.clamp(hitboxSize / 300, 0, 1), 0, 1, 0)
+HitboxSliderBar.BackgroundColor3 = Color3.fromRGB(120,120,255)
+
+local HitboxValueLabel = Instance.new("TextLabel", SettingsTab)
+HitboxValueLabel.Size = UDim2.new(1, -10, 0, 20)
+HitboxValueLabel.Position = UDim2.new(0, 5, 0, 130)
+HitboxValueLabel.BackgroundTransparency = 1
+HitboxValueLabel.Text = "size: " .. tostring(hitboxSize)
+HitboxValueLabel.TextColor3 = Color3.new(1,1,1)
+HitboxValueLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Toggles
 local aimb0tEnabled = false
 local guiVisible = true
+
+-- Hitbox logic state
+local hitboxEnabled = false
+local originalSizes = {} -- store original sizes per player (HumanoidRootPart.Size) to restore later
 
 -- Dragging
 local dragging = false
@@ -138,6 +173,7 @@ end
 
 ToggleButton.MouseButton1Click:Connect(toggleaimb0t)
 
+-- FOV slider interaction
 FOVSliderFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         local connection
@@ -186,6 +222,45 @@ UserInputService.InputBegan:Connect(function(input)
     end
 end)
 
+-- Hitbox UI interactions
+HitboxToggle.MouseButton1Click:Connect(function()
+    hitboxEnabled = not hitboxEnabled
+    HitboxToggle.Text = "hitbox expander · " .. (hitboxEnabled and "on" or "off")
+
+    if not hitboxEnabled then
+        -- restore original sizes if we have them
+        for player, originalSize in pairs(originalSizes) do
+            if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                pcall(function()
+                    player.Character.HumanoidRootPart.Size = originalSize
+                    player.Character.HumanoidRootPart.Transparency = 0
+                    player.Character.HumanoidRootPart.CanCollide = true
+                    player.Character.HumanoidRootPart.BrickColor = BrickColor.new("Medium stone grey")
+                    player.Character.HumanoidRootPart.Material = Enum.Material.SmoothPlastic
+                end)
+            end
+        end
+        originalSizes = {}
+    end
+end)
+
+-- slider for hitbox size (click and drag)
+HitboxSliderFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local conn
+        conn = RunService.RenderStepped:Connect(function()
+            local mousePos = UserInputService:GetMouseLocation()
+            local relativeX = math.clamp((mousePos.X - HitboxSliderFrame.AbsolutePosition.X) / HitboxSliderFrame.AbsoluteSize.X, 0, 1)
+            hitboxSize = math.clamp(math.floor(relativeX * 300), 10, 300)
+            HitboxSliderBar.Size = UDim2.new(hitboxSize / 300, 0, 1, 0)
+            HitboxValueLabel.Text = "size · " .. tostring(hitboxSize) .. " (default = 50)
+            if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                conn:Disconnect()
+            end
+        end)
+    end
+end)
+
 -- Aimbot targeting
 local function getClosest(cframe)
     local closestTarget = nil
@@ -211,11 +286,31 @@ local function getClosest(cframe)
     return closestTarget
 end
 
+-- Helper to apply hitbox visuals/sizing
+local function applyHitboxToPlayer(player, size)
+    if not player or not player.Character then return end
+    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    pcall(function()
+        if not originalSizes[player] then
+            originalSizes[player] = hrp.Size
+        end
+
+        hrp.Size = Vector3.new(size, size, size)
+        hrp.Transparency = 0.7
+        hrp.BrickColor = BrickColor.new("Really blue")
+        hrp.Material = Enum.Material.Neon
+        hrp.CanCollide = false
+    end)
+end
+
 -- Loop
 local loop
 loop = RunService.RenderStepped:Connect(function()
     FOVring.Position = Camera.ViewportSize / 2
 
+    -- aimbot aim
     if aimb0tEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
         local closestTarget = getClosest(Camera.CFrame)
         if closestTarget and closestTarget.Character and closestTarget.Character:FindFirstChild("Head") then
@@ -224,15 +319,38 @@ loop = RunService.RenderStepped:Connect(function()
         end
     end
 
+    -- hitbox expander behavior (client-side)
+    if hitboxEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and (player.Team ~= LocalPlayer.Team or not teamCheck) then
+                applyHitboxToPlayer(player, hitboxSize)
+            end
+        end
+    end
+
+    -- visibility of FOV ring
     if not ScreenGui.Enabled and hideCircleWithGUI then
         FOVring.Visible = false
     elseif aimb0tEnabled and ScreenGui.Enabled then
         FOVring.Visible = true
     end
 
+    -- cleanup / destroy on Delete key
     if UserInputService:IsKeyDown(Enum.KeyCode.Delete) then
         loop:Disconnect()
         FOVring:Remove()
+        -- restore sizes on exit if we modified them
+        for player, originalSize in pairs(originalSizes) do
+            if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                pcall(function()
+                    player.Character.HumanoidRootPart.Size = originalSize
+                    player.Character.HumanoidRootPart.Transparency = 0
+                    player.Character.HumanoidRootPart.CanCollide = true
+                    player.Character.HumanoidRootPart.BrickColor = BrickColor.new("Medium stone grey")
+                    player.Character.HumanoidRootPart.Material = Enum.Material.SmoothPlastic
+                end)
+            end
+        end
         ScreenGui:Destroy()
     end
 end)

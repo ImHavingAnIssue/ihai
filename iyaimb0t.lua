@@ -9,41 +9,16 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- try to create a real Drawing circle if available (exploit environments)
-local FOVring
-if typeof(Drawing) == "table" and Drawing.New then
-    -- some exploit environments use Drawing.new (lowercase/new variations exist)
-    local success, circle = pcall(function()
-        return Drawing.new and Drawing.new("Circle") or Drawing.New("Circle")
-    end)
-    if success and circle then
-        FOVring = circle
-        FOVring.Visible = false
-        FOVring.Thickness = 1.5
-        FOVring.Radius = fov
-        FOVring.Transparency = 1
-        FOVring.Color = Color3.fromRGB(255, 128, 128)
-        FOVring.Position = Vector2.new(0,0)
-    else
-        FOVring = { Position = Vector2.new(0,0), Radius = fov, Visible = false }
-        warn("Drawing API not available: using fallback FOV object.")
-    end
-else
-    -- fallback table (won't draw anything, but keeps logic running)
-    FOVring = { Position = Vector2.new(0,0), Radius = fov, Visible = false }
-    warn("Drawing API not available: using fallback FOV object.")
-end
+local FOVring = Drawing.new("Circle")
+FOVring.Visible = false
+FOVring.Thickness = 1.5
+FOVring.Radius = fov
+FOVring.Transparency = 1
+FOVring.Color = Color3.fromRGB(255, 128, 128)
 
--- GUI Setup (original behavior: parent to CoreGui)
-local ScreenGui = Instance.new("ScreenGui")
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 ScreenGui.Name = "aimb0tGUI"
--- try to parent to CoreGui (as in non-studio exploit environment). fallback to PlayerGui if CoreGui restricted.
-if pcall(function() game:GetService("CoreGui").Name end) then
-    pcall(function() ScreenGui.Parent = game.CoreGui end)
-end
-if not ScreenGui.Parent then
-    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end
 
 local Frame = Instance.new("Frame", ScreenGui)
 Frame.Size = UDim2.new(0, 150, 0, 260)
@@ -110,6 +85,19 @@ SettingsTab.Position = UDim2.new(0, 180, 0, 20)
 SettingsTab.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 SettingsTab.Visible = false
 
+-- settings title
+local SettingsHeader = Instance.new("Frame", SettingsTab)
+SettingsHeader.Size = UDim2.new(1, 0, 0, 30)
+SettingsHeader.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+SettingsHeader.BorderSizePixel = 0
+
+local SettingsLabel = Instance.new("TextLabel", SettingsHeader)
+SettingsLabel.Size = UDim2.new(1, 0, 1, 0)
+SettingsLabel.BackgroundTransparency = 1
+SettingsLabel.Text = "settings"
+SettingsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+SettingsLabel.TextSize = 14
+
 local SettingsClose = Instance.new("TextButton", SettingsTab)
 SettingsClose.Size = UDim2.new(0, 20, 0, 20)
 SettingsClose.Position = UDim2.new(1, -25, 0, 5)
@@ -147,7 +135,8 @@ local HitboxValueLabel = Instance.new("TextLabel", SettingsTab)
 HitboxValueLabel.Size = UDim2.new(1, -10, 0, 20)
 HitboxValueLabel.Position = UDim2.new(0, 5, 0, 130)
 HitboxValueLabel.BackgroundTransparency = 1
-HitboxValueLabel.Text = "size · " .. tostring(hitboxSize) .. " (default = 50)" -- fixed missing quote
+HitboxValueLabel.Text = "size · " .. tostring(hitboxSize) .. " (default = 50)"
+
 HitboxValueLabel.TextColor3 = Color3.new(1,1,1)
 HitboxValueLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -159,7 +148,7 @@ local guiVisible = true
 local hitboxEnabled = false
 local originalSizes = {} -- store original sizes per player (HumanoidRootPart.Size) to restore later
 
--- Dragging
+-- Dragging main
 local dragging = false
 local dragStart, startPos
 
@@ -183,6 +172,30 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- Dragging settings
+local draggingSettings = false
+local dragStartSettings, startPosSettings
+
+SettingsHeader.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingSettings = true
+        dragStartSettings = input.Position
+        startPosSettings = SettingsTab.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                draggingSettings = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if draggingSettings and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStartSettings
+        SettingsTab.Position = UDim2.new(startPosSettings.X.Scale, startPosSettings.X.Offset + delta.X, startPosSettings.Y.Scale, startPosSettings.Y.Offset + delta.Y)
+    end
+end)
+
 -- Logic
 local function toggleaimb0t()
     aimb0tEnabled = not aimb0tEnabled
@@ -193,9 +206,7 @@ end
 local function updateFOV(percentage)
     fov = math.clamp(math.floor(percentage * 300), 50, 300)
     FOVring.Radius = fov
-    if FOVSliderBar and FOVSliderBar.Size then
-        FOVSliderBar.Size = UDim2.new(fov / 300, 0, 1, 0)
-    end
+    FOVSliderBar.Size = UDim2.new(fov / 300, 0, 1, 0)
 end
 
 ToggleButton.MouseButton1Click:Connect(toggleaimb0t)
@@ -216,10 +227,7 @@ FOVSliderFrame.InputBegan:Connect(function(input)
 end)
 
 IYButton.MouseButton1Click:Connect(function()
-    -- note: this uses HttpGet + loadstring typical in exploit envs; may error in normal RBX environments
-    pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-    end)
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
     IYButton:Destroy()
 end)
 
@@ -245,8 +253,7 @@ end)
 UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.RightShift then
         guiVisible = not guiVisible
-        -- ScreenGui may not support 'Enabled' in some contexts; do a pcall to be safe
-        pcall(function() ScreenGui.Enabled = guiVisible end)
+        ScreenGui.Enabled = guiVisible
         if hideCircleWithGUI then
             FOVring.Visible = aimb0tEnabled and guiVisible
         end
@@ -263,12 +270,11 @@ HitboxToggle.MouseButton1Click:Connect(function()
         for player, originalSize in pairs(originalSizes) do
             if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 pcall(function()
-                    local hrp = player.Character.HumanoidRootPart
-                    hrp.Size = originalSize
-                    hrp.Transparency = 0
-                    hrp.CanCollide = true
-                    hrp.BrickColor = BrickColor.new("Medium stone grey")
-                    hrp.Material = Enum.Material.SmoothPlastic
+                    player.Character.HumanoidRootPart.Size = originalSize
+                    player.Character.HumanoidRootPart.Transparency = 0
+                    player.Character.HumanoidRootPart.CanCollide = true
+                    player.Character.HumanoidRootPart.BrickColor = BrickColor.new("Medium stone grey")
+                    player.Character.HumanoidRootPart.Material = Enum.Material.SmoothPlastic
                 end)
             end
         end
@@ -305,10 +311,8 @@ local function getClosest(cframe)
                 local headPosition = character.Head.Position
                 local screenPoint, onScreen = Camera:WorldToViewportPoint(headPosition)
                 if onScreen then
-                    local screenPos2 = Vector2.new(screenPoint.X, screenPoint.Y)
-                    local ringPos = FOVring.Position or (Camera.ViewportSize / 2)
-                    local screenDistance = (screenPos2 - ringPos).Magnitude
-                    if screenDistance < closestDistance and screenDistance < (FOVring.Radius or fov) then
+                    local screenDistance = (Vector2.new(screenPoint.X, screenPoint.Y) - FOVring.Position).Magnitude
+                    if screenDistance < closestDistance and screenDistance < fov then
                         closestDistance = screenDistance
                         closestTarget = player
                     end
@@ -342,32 +346,14 @@ end
 -- Loop
 local loop
 loop = RunService.RenderStepped:Connect(function()
-    -- update FOVring position for drawing calculations
-    local viewportCenter = Camera.ViewportSize / 2
-    if FOVring and FOVring.Position ~= nil then
-        -- if it's a Drawing circle, its Position expects Vector2
-        pcall(function() FOVring.Position = viewportCenter end)
-    end
+    FOVring.Position = Camera.ViewportSize / 2
 
-    -- draw the circle if using Drawing
-    if typeof(FOVring) == "table" and FOVring.Radius and FOVring.Visible and (getmetatable(FOVring) ~= nil) then
-        -- if this is a real Drawing object, ensure properties are up-to-date
-        pcall(function()
-            FOVring.Radius = fov
-            FOVring.Position = viewportCenter
-            -- color/visibility already handled elsewhere
-        end)
-    end
-
-    -- aimbot aim (right mouse button to aim)
+    -- aimbot aim
     if aimb0tEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
         local closestTarget = getClosest(Camera.CFrame)
         if closestTarget and closestTarget.Character and closestTarget.Character:FindFirstChild("Head") then
             local targetPosition = closestTarget.Character.Head.Position
-            -- attempt to set camera to look at target (works in most exploit clients)
-            pcall(function()
-                Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPosition)
-            end)
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPosition)
         end
     end
 
@@ -381,39 +367,28 @@ loop = RunService.RenderStepped:Connect(function()
     end
 
     -- visibility of FOV ring
-    if not (ScreenGui and ScreenGui.Enabled) and hideCircleWithGUI then
-        if type(FOVring.Visible) ~= "nil" then
-            pcall(function() FOVring.Visible = false end)
-        end
-    elseif aimb0tEnabled and (ScreenGui and ScreenGui.Enabled) then
-        pcall(function() FOVring.Visible = true end)
+    if not ScreenGui.Enabled and hideCircleWithGUI then
+        FOVring.Visible = false
+    elseif aimb0tEnabled and ScreenGui.Enabled then
+        FOVring.Visible = true
     end
 
     -- cleanup / destroy on Delete key
     if UserInputService:IsKeyDown(Enum.KeyCode.Delete) then
-        if loop then loop:Disconnect() end
-        pcall(function()
-            if type(FOVring.Remove) == "function" then
-                FOVring:Remove()
-            elseif type(FOVring) == "table" then
-                -- nothing to remove for fallback
-            end
-        end)
-
+        loop:Disconnect()
+        FOVring:Remove()
         -- restore sizes on exit if we modified them
         for player, originalSize in pairs(originalSizes) do
             if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 pcall(function()
-                    local hrp = player.Character.HumanoidRootPart
-                    hrp.Size = originalSize
-                    hrp.Transparency = 0
-                    hrp.CanCollide = true
-                    hrp.BrickColor = BrickColor.new("Medium stone grey")
-                    hrp.Material = Enum.Material.SmoothPlastic
+                    player.Character.HumanoidRootPart.Size = originalSize
+                    player.Character.HumanoidRootPart.Transparency = 0
+                    player.Character.HumanoidRootPart.CanCollide = true
+                    player.Character.HumanoidRootPart.BrickColor = BrickColor.new("Medium stone grey")
+                    player.Character.HumanoidRootPart.Material = Enum.Material.SmoothPlastic
                 end)
             end
         end
-
-        pcall(function() ScreenGui:Destroy() end)
+        ScreenGui:Destroy()
     end
 end)

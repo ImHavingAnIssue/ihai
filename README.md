@@ -1,3 +1,3 @@
-# aimb0t test
+# nothing to see here!
 
-welcome to the **aimbot test** repository.
+no, seriously.
